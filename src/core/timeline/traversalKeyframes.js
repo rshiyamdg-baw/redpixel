@@ -1,0 +1,4 @@
+import { PHASE_WORLD_CONFIG, PHASES } from '../phases/phaseConfig'
+
+export const LANDING_CONFIG = PHASE_WORLD_CONFIG[PHASES.LANDING]
+export const ABOUT_CONFIG = PHASE_WORLD_CONFIG[PHASES.ABOUT]

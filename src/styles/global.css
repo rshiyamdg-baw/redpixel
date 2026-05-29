@@ -1,0 +1,30 @@
+@import 'tailwindcss';
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    @apply h-full w-full m-0;
+  }
+
+  body {
+    @apply overflow-hidden bg-black text-white antialiased;
+    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+@layer components {
+  .webgl-layer {
+    @apply fixed inset-0 z-0;
+  }
+
+  .webgl-layer canvas {
+    @apply block h-full w-full;
+  }
+}
