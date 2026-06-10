@@ -1,56 +1,69 @@
 import { goBack, goDeeper } from '../../core/timeline/cinematicController'
-import { enterExploreMode } from '../../core/mode/modeController'
-import {
-  FIRST_INTERIOR_PHASE,
-  MAX_PHASE,
-  PHASE_LABELS,
-} from '../../core/phases/phaseConfig'
-import { useExperience } from '../../stores/useExperience'
+import { enterExploreMode, exitExploreMode } from '../../core/mode/modeController'
+import { FIRST_INTERIOR_PHASE, MAX_PHASE } from '../../core/phases/phaseConfig'
+import { useExperience, MODES } from '../../stores/useExperience'
 
 export default function TraversalControls() {
   const show = useExperience((state) => state.showTraversalControls())
   const currentPhase = useExperience((state) => state.currentPhase)
   const isTransitioning = useExperience((state) => state.isTransitioning)
+  const mode = useExperience((state) => state.mode)
 
   if (!show) return null
 
   const canGoBack = currentPhase >= FIRST_INTERIOR_PHASE && !isTransitioning
   const canGoDeeper = !isTransitioning
-  const isLoopExit = currentPhase >= MAX_PHASE
+  const isExplore = mode === MODES.EXPLORE
+
+  const handleYellowClick = () => {
+    if (isExplore) exitExploreMode()
+    else enterExploreMode()
+  }
+
+  const handleRedClick = () => {
+    if (isExplore) exitExploreMode()
+    goDeeper()
+  }
+
+  const handleBlueClick = () => {
+    if (isExplore) exitExploreMode()
+    goBack()
+  }
 
   return (
     <nav
       aria-label="Dimensional traversal"
-      className="pointer-events-auto fixed bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-3 sm:bottom-8 sm:gap-4 md:bottom-10"
+      className="pointer-events-auto fixed bottom-8 left-1/2 z-50 flex h-28 w-36 -translate-x-1/2 items-center justify-center sm:bottom-12"
     >
-      <button
-        type="button"
-        disabled={!canGoBack}
-        onClick={() => goBack()}
-        className="group flex h-12 w-12 items-center justify-center rounded-full border border-blue-400/40 bg-blue-500/10 text-blue-300 backdrop-blur-sm transition enabled:hover:scale-105 enabled:hover:border-blue-300/70 enabled:hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-30 sm:h-14 sm:w-14"
-        aria-label="Surface one layer"
-      >
-        <span className="text-lg font-light sm:text-xl">←</span>
-      </button>
-
+      {/* YELLOW: Top Center (Explore/Close Toggle) */}
       <button
         type="button"
         disabled={isTransitioning}
-        onClick={() => enterExploreMode()}
-        className="flex h-14 min-w-[9rem] items-center justify-center rounded-full border border-yellow-400/50 bg-yellow-400/10 px-5 text-xs font-medium tracking-[0.2em] text-yellow-200 uppercase backdrop-blur-sm transition hover:scale-105 hover:border-yellow-300/80 hover:bg-yellow-400/20 disabled:cursor-not-allowed disabled:opacity-40 sm:h-16 sm:min-w-[11rem] sm:text-sm"
-        aria-label={`Explore ${PHASE_LABELS[currentPhase]}`}
+        onClick={handleYellowClick}
+        className="absolute top-0 flex h-14 w-14 items-center justify-center rounded-full border border-yellow-500/40 bg-black/40 shadow-[0_0_20px_rgba(250,204,21,0.15)] backdrop-blur-md transition-all duration-300 hover:scale-110 hover:border-yellow-400 hover:bg-yellow-500/20 hover:shadow-[0_0_30px_rgba(250,204,21,0.4)] disabled:opacity-50"
       >
-        Explore
+        {/* An elegant glowing core instead of text */}
+        <div className={`h-3 w-3 rounded-full bg-yellow-400 shadow-[0_0_12px_rgba(250,204,21,1)] transition-transform duration-300 ${isExplore ? 'scale-50' : 'scale-100'}`} />
       </button>
 
+      {/* BLUE: Bottom Left (Surface/Back) */}
+      <button
+        type="button"
+        disabled={!canGoBack}
+        onClick={handleBlueClick}
+        className="absolute bottom-0 left-0 flex h-12 w-12 items-center justify-center rounded-full border border-blue-500/40 bg-black/40 text-blue-300 shadow-[0_0_20px_rgba(59,130,246,0.15)] backdrop-blur-md transition-all duration-300 hover:scale-110 hover:border-blue-400 hover:bg-blue-500/20 hover:shadow-[0_0_30px_rgba(59,130,246,0.4)] disabled:opacity-30 disabled:hover:scale-100"
+      >
+        <span className="text-xl font-light">←</span>
+      </button>
+
+      {/* RED: Bottom Right (Dive Deeper) */}
       <button
         type="button"
         disabled={!canGoDeeper}
-        onClick={() => goDeeper()}
-        className="group flex h-12 w-12 items-center justify-center rounded-full border border-red-400/40 bg-red-500/10 text-red-300 backdrop-blur-sm transition enabled:hover:scale-105 enabled:hover:border-red-300/70 enabled:hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-30 sm:h-14 sm:w-14"
-        aria-label={isLoopExit ? 'Return to landing surface' : 'Dive deeper'}
+        onClick={handleRedClick}
+        className="absolute bottom-0 right-0 flex h-12 w-12 items-center justify-center rounded-full border border-red-500/40 bg-black/40 text-red-300 shadow-[0_0_20px_rgba(239,68,68,0.15)] backdrop-blur-md transition-all duration-300 hover:scale-110 hover:border-red-400 hover:bg-red-500/20 hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] disabled:opacity-30 disabled:hover:scale-100"
       >
-        <span className="text-lg font-light sm:text-xl">→</span>
+        <span className="text-xl font-light">→</span>
       </button>
     </nav>
   )

@@ -4,7 +4,9 @@ import { initExperience } from '../core/bootstrap/initExperience'
 import ExplorePanel from '../ui/sections/ExplorePanel'
 import PhaseIndicator from '../ui/overlay/PhaseIndicator'
 import TraversalControls from '../ui/navigation/TraversalControls'
-
+import CustomCursor from '../ui/overlay/CustomCursor'
+import GuidanceOverlay from '../ui/GuidanceOverlay' 
+import LandingFooter from '../ui/LandingFooter'
 export default function Layout() {
   useEffect(() => {
     initExperience()
@@ -19,10 +21,13 @@ export default function Layout() {
       id="dom-root"
       className="pointer-events-none fixed inset-0 z-10"
     >
+      <CustomCursor />
       <main className="h-full w-full px-4 sm:px-6 md:px-10 lg:px-16">
         <PhaseIndicator />
         <TraversalControls />
         <ExplorePanel />
+        <GuidanceOverlay />
+        <LandingFooter />
       </main>
     </div>
   )

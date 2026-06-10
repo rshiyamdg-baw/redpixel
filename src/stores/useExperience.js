@@ -51,8 +51,8 @@ export const useExperience = create((set, get) => ({
   },
 
   showTraversalControls: () => {
-    const { mode, isTransitioning, currentPhase } = get()
-    if (mode === MODES.EXPLORE || isTransitioning) return false
+    const { isTransitioning, currentPhase } = get()
+    if (isTransitioning) return false
     return isExplorePhase(currentPhase)
   },
 }))

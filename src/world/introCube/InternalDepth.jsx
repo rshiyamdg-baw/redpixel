@@ -1,19 +1,14 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
-import {
-  BackSide,
-  BufferAttribute,
-  BufferGeometry,
-  ShaderMaterial,
-} from 'three'
+import { BackSide, BufferAttribute, BufferGeometry, ShaderMaterial } from 'three'
+import gsap from 'gsap'
 import { worldState } from '../../core/world/worldState'
-import {
-  internalDepthFragmentShader,
-  internalDepthVertexShader,
-} from '../../shaders/cube/internalDepth.glsl.js'
+import { internalDepthFragmentShader, internalDepthVertexShader } from '../../shaders/cube/internalDepth.glsl.js'
 import { CUBE_HALF } from './cubeEdges'
+import { useExperience, MODES } from '../../stores/useExperience'
 
 function createInnerCubeGeometry(size) {
+  // ... Keep your exact same geometry creation code here ...
   const h = size * 0.5
   const vertices = new Float32Array([
     -h, -h, h, h, -h, h, h, h, h, -h, h, h,
@@ -53,6 +48,8 @@ function createInnerCubeGeometry(size) {
 
 export default function InternalDepth() {
   const meshRef = useRef(null)
+  const mode = useExperience(state => state.mode)
+  const exploreDriver = useRef({ value: 0 })
 
   const geometry = useMemo(() => createInnerCubeGeometry(CUBE_HALF * 1.85), [])
 
@@ -64,6 +61,7 @@ export default function InternalDepth() {
         uniforms: {
           uTime: { value: 0 },
           uOpacity: { value: 0.55 },
+          uExplore: { value: 0 }, // Initialized uniform
         },
         transparent: true,
         depthWrite: false,
@@ -72,10 +70,28 @@ export default function InternalDepth() {
     [],
   )
 
+  useEffect(() => {
+    const isExplore = mode === MODES.EXPLORE
+    
+    // ALWAYS KILL ZOMBIE TWEENS BEFORE CREATING NEW ONES
+    gsap.killTweensOf(exploreDriver.current)
+    
+    gsap.to(exploreDriver.current, {
+      value: isExplore ? 1 : 0,
+      duration: 1.5,
+      ease: 'power3.inOut'
+    })
+    
+    return () => gsap.killTweensOf(exploreDriver.current)
+  }, [mode])
+
   useFrame((state) => {
     material.uniforms.uTime.value = state.clock.elapsedTime
     material.uniforms.uOpacity.value =
       worldState.shellOpacity * (0.35 + worldState.energy * 0.45)
+    
+    // Pipe the GSAP value straight into the shader
+    material.uniforms.uExplore.value = exploreDriver.current.value
   })
 
   return <mesh ref={meshRef} geometry={geometry} material={material} />
