@@ -1,16 +1,14 @@
 import { useRef, useState, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { MathUtils, Vector3 } from 'three' 
+import { MathUtils } from 'three' 
 import gsap from 'gsap'
 import { worldState } from '../../core/world/worldState'
 import { useExperience, MODES } from '../../stores/useExperience'
 import CubeInteractor from './CubeInteractor'
-import CubeRays from './CubeRays'
-import CircuitLines from './CircuitLines' 
-// import ClickFractals from './ClickFractals' 
-import InternalDepth from './InternalDepth'
 import GlassShell from './GlassShell' 
 import GemAura from './GemAura'
+import VoidDust from './VoidDust'
+import Floor from './Floor'
 
 export default function IntroCube() {
   const groupRef = useRef(null)
@@ -26,61 +24,6 @@ export default function IntroCube() {
   const exploreAnim = useRef({ progress: 0 })
   const randomView = useRef({ x: 0, y: 0, z: 0 })
 
-  const rushDriver = useRef({ value: 0 })
-  const rushSeed = useRef(0.5)
-
-  useEffect(() => {
-    rushSeed.current = Math.random()
-    gsap.killTweensOf(rushDriver.current)
-    rushDriver.current.value = 1.0 
-    gsap.to(rushDriver.current, { value: 0, duration: 3.0, ease: 'power2.out' })
-  }, [isTransitioning, mode])
-
-  // --- THE SNAPPY, LIGHTWEIGHT SNOWFLAKE ENGINE ---
-  // Expanded to 16 slots so you can spam click!
-  const rippleUniforms = useRef(new Float32Array(16 * 4))
-  const rippleSeeds = useRef(new Float32Array(16)) 
-  const rippleTypes = useRef(new Float32Array(16))
-  const rippleDrivers = useRef(Array.from({ length: 16 }, () => ({ progress: 0 })))
-  let rippleIndex = useRef(0)
-  const totalClicks = useRef(0)
-
-  const triggerSpatialPulse = (point, isLocal = false) => {
-    if (!groupRef.current) return;
-    const localPoint = isLocal ? point.clone() : groupRef.current.worldToLocal(point.clone());
-
-    // 1. NO MORE GREEDY VACUUM! Just grab the next slot directly.
-    const targetIdx = rippleIndex.current % 16;
-    rippleIndex.current++;
-    totalClicks.current += 1;
-    const isGolden = totalClicks.current % 25 === 0; // Every 20th click?
-    // Type 0: Blue, Type 1: Red, Type 2: Mixed, Type 3: GOLDEN
-    const flakeType = isGolden ? 3.0 : Math.floor(Math.random() * 3.0);
-
-    // 2. Lock the exact coordinate you clicked!
-    rippleUniforms.current[targetIdx * 4 + 0] = localPoint.x;
-    rippleUniforms.current[targetIdx * 4 + 1] = localPoint.y;
-    rippleUniforms.current[targetIdx * 4 + 2] = localPoint.z;
-    rippleSeeds.current[targetIdx] = Math.random() * 100.0; 
-    rippleTypes.current[targetIdx] = flakeType;
-
-    const driver = rippleDrivers.current[targetIdx];
-    gsap.killTweensOf(driver);
-    driver.progress = 0;
-    const fallDuration = isGolden ? 5.0 : 2.5;
-    // 3. One continuous movement: It spawns, falls, and fades out over 1.5 seconds!
-    gsap.to(driver, {
-      progress: 1.0,
-      duration: fallDuration, 
-      ease: "power1.out", // Natural deceleration as it falls
-      onUpdate: () => { rippleUniforms.current[targetIdx * 4 + 3] = driver.progress },
-      onComplete: () => {
-        // Reset seamlessly
-        rippleUniforms.current[targetIdx * 4 + 3] = 0 
-      }
-    })
-  }
-
   useEffect(() => {
     if (currentPhase !== 0) setIsHovered(false)
   }, [currentPhase])
@@ -90,7 +33,6 @@ export default function IntroCube() {
     gsap.killTweensOf(exploreAnim.current)
     
     if (isExplore) {
-      triggerSpatialPulse(new Vector3(0, 0, 0), true) 
       randomView.current = {
         x: (Math.random() - 0.5) * Math.PI * 1.5,
         y: (Math.random() - 0.5) * Math.PI * 2.0,
@@ -122,8 +64,16 @@ export default function IntroCube() {
 
     if (!groupRef.current) return
 
+    // OPTIMIZATION: If we are in Phase 3 or beyond, the cube is behind us!
+    // We lock its animations to save processing power!
+    if (currentPhase >= 3) {
+       groupRef.current.position.set(0,0,0);
+       groupRef.current.scale.setScalar(1.0);
+       return; 
+    }
+
+    // --- PHASE 1 & 2 ANIMATIONS ---
     const ext = exploreAnim.current.progress
-    
     const slideOffsetX = viewport.width > 6 ? -1.8 : 0 
     const slideOffsetY = viewport.width <= 6 ? -1.0 : 0 
     
@@ -136,8 +86,7 @@ export default function IntroCube() {
     const modeScale = MathUtils.lerp(1.0, targetModeScale, ext)
     
     const targetScale = (worldState.cubeScale || 1.0) * unfoldScale * hoverSwell * modeScale
-    const currentScale = groupRef.current.scale.x
-    groupRef.current.scale.setScalar(MathUtils.lerp(currentScale, targetScale, 8 * delta))
+    groupRef.current.scale.setScalar(MathUtils.lerp(groupRef.current.scale.x, targetScale, 8 * delta))
 
     const baseRotY = worldState.cubeRotation || 0
     const targetRotX = ext * randomView.current.x
@@ -160,15 +109,11 @@ export default function IntroCube() {
       <GemAura />
       <group ref={parallaxGroupRef}>
           <group ref={groupRef}>
-            <CubeInteractor onHoverChange={setIsHovered} onPump={(p) => triggerSpatialPulse(p, false)} />
-            <InternalDepth />
-            <CubeRays />
-            <CircuitLines ripplesRef={rippleUniforms} rushRef={rushDriver} rushSeedRef={rushSeed} /> 
-            
-            {/* <ClickFractals ripplesRef={rippleUniforms} seedsRef={rippleSeeds} typesRef={rippleTypes} /> */}
-            
+            <CubeInteractor onHoverChange={setIsHovered} />
             <GlassShell /> 
           </group>
+          <VoidDust />
+          <Floor />
       </group>
     </group>
   )

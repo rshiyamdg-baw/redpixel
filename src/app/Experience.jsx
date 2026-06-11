@@ -30,6 +30,7 @@ export default function Experience() {
           far: 500,
           position: [0, 0, 12],
         }}
+        shadows
       >
         <Suspense fallback={null}>
           <Scene />

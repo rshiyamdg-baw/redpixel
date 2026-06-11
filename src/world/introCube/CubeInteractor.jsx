@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useExperience } from '../../stores/useExperience'
 import { enterFromLanding } from '../../core/timeline/cinematicController'
 import { isLandingSurface } from '../../core/phases/phaseConfig'
@@ -9,10 +10,15 @@ export default function CubeInteractor({ onHoverChange, onPump }) {
 
   const isClickable = !isTransitioning
 
-  if (!isClickable) {
-    if (onHoverChange) onHoverChange(false)
-    return null
-  }
+  // THE FIX: SetTimeout guarantees this fires OUTSIDE the React Render Phase!
+  useEffect(() => {
+    if (!isClickable && onHoverChange) {
+      setTimeout(() => onHoverChange(false), 0)
+    }
+  }, [isClickable, onHoverChange])
+
+  // If the cube is locked, do not render the raycast box
+  if (!isClickable) return null
 
   return (
     <mesh
@@ -27,15 +33,15 @@ export default function CubeInteractor({ onHoverChange, onPump }) {
         }
         if (onHoverChange) onHoverChange(false)
       }}
-      onPointerOver={() => {
+      onPointerOver={(e) => {
+        e.stopPropagation()
         if (onHoverChange) onHoverChange(true)
       }}
-      onPointerOut={() => {
+      onPointerOut={(e) => {
+        e.stopPropagation()
         if (onHoverChange) onHoverChange(false)
       }}
     >
-      {/* THE FIX: A Box strictly larger than the Glass Shell (2.4 > 2.0). 
-          This intercepts the mouse before the glass can block it! */}
       <boxGeometry args={[2.4, 2.4, 2.4]} />
       <meshBasicMaterial transparent opacity={0} depthWrite={false} side={DoubleSide} />
     </mesh>

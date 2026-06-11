@@ -39,7 +39,7 @@ export const PhaseAbout = () => (
                 <div className="absolute -top-2 -left-2 w-4 h-4 border-t border-l border-red-500/80 transition-all group-hover:-translate-x-1 group-hover:-translate-y-1" />
                 <div className="absolute -bottom-2 -right-2 w-4 h-4 border-b border-r border-red-500/80 transition-all group-hover:translate-x-1 group-hover:translate-y-1" />
                 <div className="absolute inset-0 bg-black overflow-hidden border border-red-500/20">
-                    <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=300&q=80" alt="Profile" className="w-full h-full object-cover grayscale mix-blend-luminosity group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" />
+                    <img src="/images/me.jpg" alt="Profile" className="w-full h-full object-cover grayscale mix-blend-luminosity group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" />
                 </div>
                 <div className="absolute inset-0 bg-red-500/10 mix-blend-multiply pointer-events-none" />
             </div>
@@ -59,12 +59,6 @@ export const PhaseAbout = () => (
                 <SkillBar name="GSAP Animation" percent={90} />
                 <SkillBar name="UI Architecture" percent={88} />
             </div>
-            <div className="sm:hidden">
-                <h4 className="font-mono text-[10px] text-red-500/60 mb-2 border-b border-red-500/20 pb-1 tracking-[0.2em]">SYS.LANG</h4>
-                <LanguageDots name="ENGLISH" level={5} />
-                <LanguageDots name="JAVASCRIPT" level={5} />
-                <LanguageDots name="GLSL" level={4} />
-            </div>
             <div>
                 <h4 className="font-mono text-[10px] text-red-500/60 mb-3 border-b border-red-500/20 pb-1 tracking-[0.2em]">TIMELINE.LOG</h4>
                 <ExperienceNode title="Senior Spatial Dev" role="Redpixel Corp" date="2021 - PRESENT" />
@@ -75,11 +69,10 @@ export const PhaseAbout = () => (
 )
 
 export const PhaseWorks = ({ onOpenWork }) => {
-    // Robust, highly distinct visual placeholders for the works
     const works = [
-        { id: 1, title: 'PROJECT.ALPHA', img: 'https://images.unsplash.com/photo-1614729939124-032f0b56c9ce?auto=format&fit=crop&w=800&q=80', desc: 'A volumetric WebGL dashboard.', link: '#' },
-        { id: 2, title: 'PROJECT.BETA', img: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80', desc: 'Cyberpunk e-commerce experience.', link: '#' },
-        { id: 3, title: 'PROJECT.GAMMA', img: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=800&q=80', desc: 'Generative art platform.', link: '#' }
+        { id: 1, title: 'PROJECT.ALPHA', img: '/images/project-alpha.jpg', desc: 'A volumetric WebGL dashboard.', link: '#' },
+        { id: 2, title: 'PROJECT.BETA', img: '/images/project-beta.jpg', desc: 'Cyberpunk e-commerce experience.', link: '#' },
+        { id: 3, title: 'PROJECT.GAMMA', img: '/images/project-gamma.jpg', desc: 'Generative art platform.', link: '#' }
     ]
     return (
         <div className="flex flex-col mt-4 sm:mt-6 relative z-10 gap-3">
@@ -100,30 +93,36 @@ export const PhaseWorks = ({ onOpenWork }) => {
     )
 }
 
+// THE NEW PHASE 3: Sleek, Minimalist Vitrail Theme
 export const PhaseContact = () => (
     <div className="mt-6 relative z-10 flex flex-col gap-6 ui-reveal opacity-0" style={{ clipPath: 'inset(0% 100% 0% 0%)' }}>
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border border-red-500/20 bg-black/40 p-4">
-            <div>
-                <p className="font-mono text-xs text-white/50 tracking-widest mb-1">PRIMARY COMMS</p>
-                <p className="font-mono text-xs sm:text-sm text-white break-all">hello@yourdomain.com</p>
-                <p className="font-mono text-xs text-red-400 mt-1">@YourTelegramID</p>
-            </div>
-            <div className="hidden sm:flex w-12 h-12 border border-red-500/30 items-center justify-center bg-red-500/5 shrink-0">
-                 <span className="animate-pulse text-red-500 font-mono text-xl">&#9679;</span>
-            </div>
-        </div>
         
-        <div className="relative pt-2">
-            <div className="absolute top-0 left-0 w-2 h-[1px] bg-red-500" />
-            <div className="absolute top-0 left-0 w-[1px] h-2 bg-red-500" />
+        {/* Sleek Dark Glass Box */}
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-6 border border-white/10 bg-[#050000]/80 backdrop-blur-md p-6 relative group hover:border-amber-600/50 transition-colors duration-500">
             
-            <p className="font-mono text-[10px] text-red-400/80 mb-2 tracking-[0.3em]">INITIATE PING_</p>
-            <div className="flex flex-col sm:flex-row gap-2">
-                <input type="email" placeholder="ENTER_EMAIL_ADDR..." className="flex-1 h-10 bg-black/60 border border-red-500/20 px-3 text-xs text-white font-mono focus:outline-none focus:border-red-500/80 transition-colors placeholder:text-white/20" />
-                <button className="h-10 bg-red-500/10 hover:bg-red-500 hover:text-white text-red-400 font-mono text-xs tracking-widest px-6 border border-red-500/30 transition-all">
-                    SEND
-                </button>
+            <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-amber-500 to-red-600 opacity-50" />
+
+            <div>
+                <p className="font-mono text-[10px] text-amber-500/50 tracking-[0.3em] mb-2">SECURE_LINK</p>
+                <p className="font-mono text-sm sm:text-base text-white/90 font-light tracking-wide break-all">hello@yourdomain.com</p>
+                <p className="font-mono text-xs text-red-400/80 mt-2 tracking-widest">@YourTelegramID</p>
             </div>
+            
+            <button className="h-12 px-8 bg-transparent border border-amber-500/30 hover:bg-amber-600/10 text-amber-500 font-mono text-xs tracking-[0.3em] transition-all duration-300">
+                INITIATE
+            </button>
+        </div>
+    </div>
+)
+
+// THE NEW PHASE 4: The Deep Void
+export const PhaseDeepVoid = () => (
+    <div className="mt-6 relative z-10 flex flex-col gap-6 ui-reveal opacity-0" style={{ clipPath: 'inset(0% 100% 0% 0%)' }}>
+        <div className="p-6 border border-red-900/30 bg-black/60 relative">
+            <p className="font-mono text-xs text-white/40 leading-loose text-justify tracking-wider">
+                "You have traversed the physical shell. Welcome to the deep resonance chamber. This is a space reserved for high-value architecture, experimental systems, and encrypted data."
+            </p>
+            <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-amber-600/50 to-transparent mt-6" />
         </div>
     </div>
 )
@@ -131,5 +130,6 @@ export const PhaseContact = () => (
 export const PHASE_CONTENT = {
   1: { title: 'SYS.ABOUT', desc: 'BIOMETRIC_DATA // SKILL_MATRIX // LOG' },
   2: { title: 'SYS.WORKS', desc: 'PROJECT_NODES // ARCHIVES // DATA_VIZ' },
-  3: { title: 'SYS.SIGNAL', desc: 'COMMS_LINK // DIRECT_PING // ENCRYPTED' },
+  3: { title: 'SYS.SIGNAL', desc: 'RESONANCE // DIRECT_PING // ENCRYPTED' },
+  4: { title: 'SYS.VOID', desc: 'DEEP_STORAGE // EXPERIMENTAL_CHAMBER' },
 }
