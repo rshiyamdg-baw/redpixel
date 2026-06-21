@@ -1,25 +1,31 @@
 import { Canvas } from '@react-three/fiber'
-import { Suspense, useEffect } from 'react'
+import { Suspense } from 'react'
+import { useExperience } from '../stores/useExperience'
 import TimelineBridge from '../core/timeline/TimelineBridge'
 import IntroCube from '../world/introCube/IntroCube'
-
 
 function Scene() {
   return (
     <>
       <TimelineBridge />
       <ambientLight intensity={0.4} />
-      <directionalLight position={[4, 6, 8]} intensity={1.2} />
+      <directionalLight position={[4, 8, 8]} intensity={1.2} />
       <IntroCube />
     </>
   )
 }
 
 export default function Experience() {
+  // Grab the detection result from the store
+  const isLowEnd = useExperience((state) => state.isLowEnd)
+
   return (
     <div id="webgl-root" className="webgl-layer fixed inset-0 z-0">
       <Canvas
-        dpr={[1, 1.5]}
+        // THE CRITICAL CLAMP: 
+        // If it's a weak device, lock it to 1x resolution. 
+        // If it's a strong device, allow up to 2x resolution.
+        dpr={isLowEnd ? 1 : [1, 2]}
         gl={{
           antialias: true,
           alpha: true,

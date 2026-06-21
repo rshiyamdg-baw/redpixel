@@ -23,7 +23,9 @@ export const useExperience = create((set, get) => ({
   isMobile: false,
   activeProject: null,
   activeSignal: null,
+  isLowEnd: false,
 
+  setLowEnd: (status) => set({ isLowEnd: status }),
   setCurrentPhase: (currentPhase) => set({ currentPhase }),
   setTargetPhase: (targetPhase) => set({ targetPhase }),
   setPreviousPhase: (previousPhase) => set({ previousPhase }),
