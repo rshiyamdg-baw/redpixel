@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { goBack, goDeeper } from '../../core/timeline/cinematicController'
 import { enterExploreMode, exitExploreMode } from '../../core/mode/modeController'
 import { FIRST_INTERIOR_PHASE, MAX_PHASE } from '../../core/phases/phaseConfig'
@@ -8,6 +9,9 @@ export default function TraversalControls() {
   const currentPhase = useExperience((state) => state.currentPhase)
   const isTransitioning = useExperience((state) => state.isTransitioning)
   const mode = useExperience((state) => state.mode)
+
+  // NEW: Local state to lock the buttons while waiting for the cube to re-center
+  const [isPending, setIsPending] = useState(false)
 
   if (!show) return null
 
@@ -21,13 +25,31 @@ export default function TraversalControls() {
   }
 
   const handleRedClick = () => {
-    if (isExplore) exitExploreMode()
-    goDeeper()
+    if (isExplore) {
+      setIsPending(true)
+      exitExploreMode()
+      // Wait 1 second for the cube to slide back to the center before diving
+      setTimeout(() => {
+        goDeeper()
+        setIsPending(false)
+      }, 1000)
+    } else {
+      goDeeper()
+    }
   }
 
   const handleBlueClick = () => {
-    if (isExplore) exitExploreMode()
-    goBack()
+    if (isExplore) {
+      setIsPending(true)
+      exitExploreMode()
+      // Wait 1 second for the cube to slide back to the center before diving
+      setTimeout(() => {
+        goBack()
+        setIsPending(false)
+      }, 1000)
+    } else {
+      goBack()
+    }
   }
 
   return (
@@ -38,18 +60,18 @@ export default function TraversalControls() {
       {/* YELLOW: Top Center (Explore/Close Toggle) */}
       <button
         type="button"
-        disabled={isTransitioning}
+        disabled={isTransitioning || isPending}
         onClick={handleYellowClick}
         className="absolute top-0 flex h-14 w-14 items-center justify-center rounded-full border border-yellow-500/40 bg-black/40 shadow-[0_0_20px_rgba(250,204,21,0.15)] backdrop-blur-md transition-all duration-300 hover:scale-110 hover:border-yellow-400 hover:bg-yellow-500/20 hover:shadow-[0_0_30px_rgba(250,204,21,0.4)] disabled:opacity-50"
       >
-        {/* An elegant glowing core instead of text */}
         <div className={`h-3 w-3 rounded-full bg-yellow-400 shadow-[0_0_12px_rgba(250,204,21,1)] transition-transform duration-300 ${isExplore ? 'scale-50' : 'scale-100'}`} />
       </button>
 
       {/* BLUE: Bottom Left (Surface/Back) */}
       <button
         type="button"
-        disabled={!canGoBack}
+        // Disable button if naturally blocked OR if we are waiting for the re-center animation
+        disabled={!canGoBack || isPending}
         onClick={handleBlueClick}
         className="absolute bottom-0 left-0 flex h-12 w-12 items-center justify-center rounded-full border border-blue-500/40 bg-black/40 text-blue-300 shadow-[0_0_20px_rgba(59,130,246,0.15)] backdrop-blur-md transition-all duration-300 hover:scale-110 hover:border-blue-400 hover:bg-blue-500/20 hover:shadow-[0_0_30px_rgba(59,130,246,0.4)] disabled:opacity-30 disabled:hover:scale-100"
       >
@@ -59,7 +81,8 @@ export default function TraversalControls() {
       {/* RED: Bottom Right (Dive Deeper) */}
       <button
         type="button"
-        disabled={!canGoDeeper}
+        // Disable button if naturally blocked OR if we are waiting for the re-center animation
+        disabled={!canGoDeeper || isPending}
         onClick={handleRedClick}
         className="absolute bottom-0 right-0 flex h-12 w-12 items-center justify-center rounded-full border border-red-500/40 bg-black/40 text-red-300 shadow-[0_0_20px_rgba(239,68,68,0.15)] backdrop-blur-md transition-all duration-300 hover:scale-110 hover:border-red-400 hover:bg-red-500/20 hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] disabled:opacity-30 disabled:hover:scale-100"
       >

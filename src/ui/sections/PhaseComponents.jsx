@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 const SkillBar = ({ name, percent }) => (
     <div className="mb-3">
         <div className="flex justify-between font-mono text-[10px] text-white/70 mb-1 tracking-widest">
@@ -93,39 +91,39 @@ export const PhaseWorks = ({ onOpenWork }) => {
     )
 }
 
-// THE NEW PHASE 3: Sleek, Minimalist Vitrail Theme
-export const PhaseContact = () => (
-    <div className="mt-6 relative z-10 flex flex-col gap-6 ui-reveal opacity-0" style={{ clipPath: 'inset(0% 100% 0% 0%)' }}>
+// // THE OLD PHASE 3: Sleek, Minimalist Vitrail Theme??
+// export const PhaseContact = () => (
+//     <div className="mt-6 relative z-10 flex flex-col gap-6 ui-reveal opacity-0" style={{ clipPath: 'inset(0% 100% 0% 0%)' }}>
         
-        {/* Sleek Dark Glass Box */}
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-6 border border-white/10 bg-[#050000]/80 backdrop-blur-md p-6 relative group hover:border-amber-600/50 transition-colors duration-500">
+//         {/* Sleek Dark Glass Box */}
+//         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-6 border border-white/10 bg-[#050000]/80 backdrop-blur-md p-6 relative group hover:border-amber-600/50 transition-colors duration-500">
             
-            <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-amber-500 to-red-600 opacity-50" />
+//             <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-amber-500 to-red-600 opacity-50" />
 
-            <div>
-                <p className="font-mono text-[10px] text-amber-500/50 tracking-[0.3em] mb-2">SECURE_LINK</p>
-                <p className="font-mono text-sm sm:text-base text-white/90 font-light tracking-wide break-all">hello@yourdomain.com</p>
-                <p className="font-mono text-xs text-red-400/80 mt-2 tracking-widest">@YourTelegramID</p>
-            </div>
+//             <div>
+//                 <p className="font-mono text-[10px] text-amber-500/50 tracking-[0.3em] mb-2">SECURE_LINK</p>
+//                 <p className="font-mono text-sm sm:text-base text-white/90 font-light tracking-wide break-all">hello@yourdomain.com</p>
+//                 <p className="font-mono text-xs text-red-400/80 mt-2 tracking-widest">@YourTelegramID</p>
+//             </div>
             
-            <button className="h-12 px-8 bg-transparent border border-amber-500/30 hover:bg-amber-600/10 text-amber-500 font-mono text-xs tracking-[0.3em] transition-all duration-300">
-                INITIATE
-            </button>
-        </div>
-    </div>
-)
+//             <button className="h-12 px-8 bg-transparent border border-amber-500/30 hover:bg-amber-600/10 text-amber-500 font-mono text-xs tracking-[0.3em] transition-all duration-300">
+//                 INITIATE
+//             </button>
+//         </div>
+//     </div>
+// )
 
-// THE NEW PHASE 4: The Deep Void
-export const PhaseDeepVoid = () => (
-    <div className="mt-6 relative z-10 flex flex-col gap-6 ui-reveal opacity-0" style={{ clipPath: 'inset(0% 100% 0% 0%)' }}>
-        <div className="p-6 border border-red-900/30 bg-black/60 relative">
-            <p className="font-mono text-xs text-white/40 leading-loose text-justify tracking-wider">
-                "You have traversed the physical shell. Welcome to the deep resonance chamber. This is a space reserved for high-value architecture, experimental systems, and encrypted data."
-            </p>
-            <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-amber-600/50 to-transparent mt-6" />
-        </div>
-    </div>
-)
+// // THE OLD PHASE 4: The Deep Void
+// export const PhaseDeepVoid = () => (
+//     <div className="mt-6 relative z-10 flex flex-col gap-6 ui-reveal opacity-0" style={{ clipPath: 'inset(0% 100% 0% 0%)' }}>
+//         <div className="p-6 border border-red-900/30 bg-black/60 relative">
+//             <p className="font-mono text-xs text-white/40 leading-loose text-justify tracking-wider">
+//                 "You have traversed the physical shell. Welcome to the deep resonance chamber. This is a space reserved for high-value architecture, experimental systems, and encrypted data."
+//             </p>
+//             <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-amber-600/50 to-transparent mt-6" />
+//         </div>
+//     </div>
+// )
 
 export const PHASE_CONTENT = {
   1: { title: 'SYS.ABOUT', desc: 'BIOMETRIC_DATA // SKILL_MATRIX // LOG' },

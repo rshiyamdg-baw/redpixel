@@ -197,7 +197,7 @@ export function goDeeper() {
   if (!store.canTraverse()) return null
 
   if (store.currentPhase >= MAX_PHASE) {
-    return completeLoopToLanding()
+    return transitionToPhase(PHASES.ABOUT, -1)
   }
 
   return transitionToPhase(store.currentPhase + 1, 1)

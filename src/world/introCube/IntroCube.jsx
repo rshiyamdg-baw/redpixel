@@ -7,8 +7,8 @@ import { useExperience, MODES } from '../../stores/useExperience'
 import CubeInteractor from './CubeInteractor'
 import GlassShell from './GlassShell' 
 import GemAura from './GemAura'
-import VoidDust from './VoidDust'
-import Floor from './Floor'
+import InnerWorldEnvironment from './InnerWorldEnvironment'
+
 
 export default function IntroCube() {
   const groupRef = useRef(null)
@@ -23,10 +23,27 @@ export default function IntroCube() {
 
   const exploreAnim = useRef({ progress: 0 })
   const randomView = useRef({ x: 0, y: 0, z: 0 })
+//   const prevPhaseRef = useRef(currentPhase)
 
-  useEffect(() => {
-    if (currentPhase !== 0) setIsHovered(false)
-  }, [currentPhase])
+//   useEffect(() => {
+//     if (!groupRef.current) return;
+//     if (prevPhaseRef.current === 3 && currentPhase === 0) {
+//       // Teleport deep into the screen so it flies FORWARD
+//       groupRef.current.position.z = -30;
+      
+//   } else if (prevPhaseRef.current === 0 && currentPhase === 3) {
+//       // Teleport behind the camera so it flies BACKWARD
+//       groupRef.current.position.z = 20;
+      
+//   }
+//   prevPhaseRef.current = currentPhase;
+// }, [currentPhase])
+
+useEffect(() => {
+  if (currentPhase !== 0) setIsHovered(false)
+}, [currentPhase]) 
+
+ 
 
   useEffect(() => {
     const isExplore = mode === MODES.EXPLORE
@@ -64,15 +81,7 @@ export default function IntroCube() {
 
     if (!groupRef.current) return
 
-    // OPTIMIZATION: If we are in Phase 3 or beyond, the cube is behind us!
-    // We lock its animations to save processing power!
-    if (currentPhase >= 3) {
-       groupRef.current.position.set(0,0,0);
-       groupRef.current.scale.setScalar(1.0);
-       return; 
-    }
 
-    // --- PHASE 1 & 2 ANIMATIONS ---
     const ext = exploreAnim.current.progress
     const slideOffsetX = viewport.width > 6 ? -1.8 : 0 
     const slideOffsetY = viewport.width <= 6 ? -1.0 : 0 
@@ -80,6 +89,13 @@ export default function IntroCube() {
     groupRef.current.position.x = MathUtils.lerp(groupRef.current.position.x, slideOffsetX * ext, 5 * delta)
     groupRef.current.position.y = MathUtils.lerp(groupRef.current.position.y, slideOffsetY * ext, 5 * delta)
 
+    let targetZ = 0;
+    if (currentPhase === 0) targetZ = 0;
+    else if (currentPhase === 1) targetZ = 0;
+    else if (currentPhase === 2) targetZ = 12; 
+    else if (currentPhase >= 3) targetZ = 20;
+    
+    groupRef.current.position.z = MathUtils.lerp(groupRef.current.position.z, targetZ, 4 * delta)
     const unfoldScale = 1 + worldState.unfold * 0.65
     const hoverSwell = (isHovered && currentPhase === 0) ? 1.08 : 1.0 
     const targetModeScale = viewport.width <= 6 ? 0.45 : 0.65
@@ -108,12 +124,16 @@ export default function IntroCube() {
     <group>
       <GemAura />
       <group ref={parallaxGroupRef}>
+         
+
+          {/* Rotating Cube! */}
           <group ref={groupRef}>
             <CubeInteractor onHoverChange={setIsHovered} />
             <GlassShell /> 
           </group>
-          <VoidDust />
-          <Floor />
+
+          
+          <InnerWorldEnvironment cubeRef={groupRef} />
       </group>
     </group>
   )

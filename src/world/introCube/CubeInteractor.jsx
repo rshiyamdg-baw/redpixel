@@ -10,27 +10,25 @@ export default function CubeInteractor({ onHoverChange, onPump }) {
 
   const isClickable = !isTransitioning
 
-  // THE FIX: SetTimeout guarantees this fires OUTSIDE the React Render Phase!
   useEffect(() => {
     if (!isClickable && onHoverChange) {
       setTimeout(() => onHoverChange(false), 0)
     }
   }, [isClickable, onHoverChange])
 
-  // If the cube is locked, do not render the raycast box
   if (!isClickable) return null
 
   return (
     <mesh
+      castShadow={false}    // THE FIX: Do not cast the phantom brick shadow!
+      receiveShadow={false} // THE FIX: Do not catch shadows!
       onPointerDown={(event) => {
         event.stopPropagation()
         if (onPump) onPump(event.point) 
       }}
       onClick={(event) => {
         event.stopPropagation()
-        if (isLandingSurface(currentPhase)) {
-           enterFromLanding()
-        }
+        if (isLandingSurface(currentPhase)) enterFromLanding()
         if (onHoverChange) onHoverChange(false)
       }}
       onPointerOver={(e) => {
@@ -43,7 +41,14 @@ export default function CubeInteractor({ onHoverChange, onPump }) {
       }}
     >
       <boxGeometry args={[2.4, 2.4, 2.4]} />
-      <meshBasicMaterial transparent opacity={0} depthWrite={false} side={DoubleSide} />
+      {/* colorWrite={false} is an ultimate optimization: the GPU won't even try to paint it! */}
+      <meshBasicMaterial 
+        transparent 
+        opacity={0} 
+        depthWrite={false} 
+        colorWrite={false} 
+        side={DoubleSide} 
+      />
     </mesh>
   )
 }
