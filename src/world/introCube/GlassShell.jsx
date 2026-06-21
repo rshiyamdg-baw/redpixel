@@ -1,20 +1,35 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { BoxGeometry, MeshPhysicalMaterial, DoubleSide, MeshDepthMaterial, RGBADepthPacking } from 'three'
 import { useExperience } from '../../stores/useExperience'
 import { CUBE_HALF } from './cubeEdges'
 
+// Fast hook to detect mobile viewports safely
+const useMobileDetect = () => {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+  return isMobile
+}
+
 export default function GlassShell() {
   const currentPhase = useExperience((state) => state.currentPhase)
+  const isMobile = useMobileDetect()
 
   const { geometry, material, depthMaterial } = useMemo(() => {
     const geo = new BoxGeometry(CUBE_HALF * 2.0, CUBE_HALF * 2.0, CUBE_HALF * 2.0)
     
-    // THE GEMSTONE PHYSICS
+    // THE RESPONSIVE PHYSICS
+    // We keep the exact same material, but we mathematically downgrade 
+    // the heavy screen-space refraction on mobile devices to save memory bandwidth.
     const mat = new MeshPhysicalMaterial({
       color: 0xffffff,
-      transmission: 1.0,     
-      opacity: 1.0,          
-      metalness: 0.1,        
+      transmission: isMobile ? 0.0 : 1.0,  // Disable heavy refraction on mobile
+      opacity: isMobile ? 0.95 : 1.0,      // Use traditional alpha transparency on mobile
+      metalness: isMobile ? 0.85 : 0.1,        
       roughness: 0.0,        
       ior: 1.5,              
       thickness: 1.5,        
@@ -92,6 +107,7 @@ export default function GlassShell() {
             }
 
             float edgeDist = 100.0;
+            // The 25-loop bevel calculation remains intact for your artistic vision
             for(int j=-2; j<=2; j++)
             for(int i=-2; i<=2; i++){
                 vec2 b = vec2(float(i), float(j));
@@ -174,7 +190,6 @@ export default function GlassShell() {
       )
     }
 
-    // --- THE FIX: We must pass RGBADepthPacking to properly map soft shadows!
     const depthMat = new MeshDepthMaterial({
       depthPacking: RGBADepthPacking,
       side: DoubleSide
@@ -257,25 +272,22 @@ export default function GlassShell() {
             float hardEdge = smoothstep(0.02, 0.0, min(bX, bY));
             customLead = max(customLead, hardEdge);
 
-            // THE WIZARD'S TRICK: Discard the glass pixels so light passes straight through!
             if (customLead < 0.5) discard;
         `
       )
     }
     
-    // THE FIX 1: Tell Three.js this is a highly customized shader, do not cache it!
     depthMat.customProgramCacheKey = () => 'vitrail_hollow_shadow_v1'
 
-    // THE FIX 2: Return ALL materials from useMemo!
     return { geometry: geo, material: mat, depthMaterial: depthMat }
-  }, [])
+  }, [isMobile]) // Recompiles safely ONLY when jumping between desktop/mobile viewports
 
   return (
       <mesh 
         geometry={geometry} 
         material={material} 
-        customDepthMaterial={depthMaterial} // This is now properly linked!
-        castShadow // This forces the depthMaterial to run!
+        customDepthMaterial={depthMaterial} 
+        castShadow 
         raycast={currentPhase === 3 ? undefined : () => null}
       />
   )
