@@ -1,35 +1,23 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo } from 'react'
 import { BoxGeometry, MeshPhysicalMaterial, DoubleSide, MeshDepthMaterial, RGBADepthPacking } from 'three'
+import { MeshTransmissionMaterial } from '@react-three/drei'
 import { useExperience } from '../../stores/useExperience'
 import { CUBE_HALF } from './cubeEdges'
 
-// Fast hook to detect mobile viewports safely
-const useMobileDetect = () => {
-  const [isMobile, setIsMobile] = useState(false)
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-  return isMobile
-}
-
 export default function GlassShell() {
   const currentPhase = useExperience((state) => state.currentPhase)
-  const isMobile = useMobileDetect()
+  
+  // Instantly grab the GPU status from Zustand!
+  const isLowEnd = useExperience((state) => state.isLowEnd)
 
-  const { geometry, material, depthMaterial } = useMemo(() => {
+  const { geometry, highEndMat, highEndDepth } = useMemo(() => {
     const geo = new BoxGeometry(CUBE_HALF * 2.0, CUBE_HALF * 2.0, CUBE_HALF * 2.0)
     
-    // THE RESPONSIVE PHYSICS
-    // We keep the exact same material, but we mathematically downgrade 
-    // the heavy screen-space refraction on mobile devices to save memory bandwidth.
     const mat = new MeshPhysicalMaterial({
       color: 0xffffff,
-      transmission: isMobile ? 0.0 : 1.0,  // Disable heavy refraction on mobile
-      opacity: isMobile ? 0.95 : 1.0,      // Use traditional alpha transparency on mobile
-      metalness: isMobile ? 0.85 : 0.1,        
+      transmission: 1.0,     
+      opacity: 1.0,          
+      metalness: 0.1,        
       roughness: 0.0,        
       ior: 1.5,              
       thickness: 1.5,        
@@ -107,9 +95,8 @@ export default function GlassShell() {
             }
 
             float edgeDist = 100.0;
-            // The 25-loop bevel calculation remains intact for your artistic vision
-            for(int j=-2; j<=2; j++)
-            for(int i=-2; i<=2; i++){
+            for(int j=-1; j<=1; j++)
+            for(int i=-1; i<=1; i++){
                 vec2 b = vec2(float(i), float(j));
                 vec2 h = hash2(p + b + faceSeed * 13.37);
                 vec2 center = b + h;
@@ -255,8 +242,8 @@ export default function GlassShell() {
             }
 
             float edgeDist = 100.0;
-            for(int j=-2; j<=2; j++)
-            for(int i=-2; i<=2; i++){
+            for(int j=-1; j<=1; j++)
+            for(int i=-1; i<=1; i++){
                 vec2 b = vec2(float(i), float(j));
                 vec2 h = hash2(p + b + faceSeed * 13.37);
                 vec2 center = b + h;
@@ -277,18 +264,33 @@ export default function GlassShell() {
       )
     }
     
-    depthMat.customProgramCacheKey = () => 'vitrail_hollow_shadow_v1'
+    depthMat.customProgramCacheKey = () => 'vitrail_hollow_shadow_v4'
 
-    return { geometry: geo, material: mat, depthMaterial: depthMat }
-  }, [isMobile]) // Recompiles safely ONLY when jumping between desktop/mobile viewports
+    return { geometry: geo, highEndMat: mat, highEndDepth: depthMat }
+  }, []) 
 
   return (
-      <mesh 
-        geometry={geometry} 
-        material={material} 
-        customDepthMaterial={depthMaterial} 
-        castShadow 
-        raycast={currentPhase === 3 ? undefined : () => null}
-      />
+    <mesh 
+      geometry={geometry} 
+      castShadow 
+      raycast={currentPhase === 3 ? undefined : () => null}
+    >
+      {isLowEnd ? (
+        <MeshTransmissionMaterial 
+          resolution={128}        
+          thickness={1.5} 
+          roughness={0.15} 
+          transmission={1} 
+          ior={1.2} 
+          chromaticAberration={0.04}
+          color="#a8a29e"         
+          side={DoubleSide}
+        />
+      ) : (
+        <primitive object={highEndMat} attach="material" />
+      )}
+      
+      {!isLowEnd && <primitive object={highEndDepth} attach="customDepthMaterial" />}
+    </mesh>
   )
 }

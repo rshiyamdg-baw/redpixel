@@ -1,7 +1,8 @@
 import { Canvas } from '@react-three/fiber'
-import { Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
 import TimelineBridge from '../core/timeline/TimelineBridge'
 import IntroCube from '../world/introCube/IntroCube'
+
 
 function Scene() {
   return (
