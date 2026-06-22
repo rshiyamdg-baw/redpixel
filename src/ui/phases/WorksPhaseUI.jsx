@@ -2,17 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { useExperience, MODES } from '../../stores/useExperience'
 
-// const RotatingPixel = ({ colorClass }) => (
-//   <div className={`absolute right-5 top-1/2 -translate-y-1/2 h-2 w-2 border opacity-0 transition-all duration-700 group-hover/btn:opacity-100 group-hover/btn:rotate-[225deg] shadow-[0_0_15px_rgba(0,0,0,0)] ${colorClass}`} />
-// )
-
 const PROJECTS = [
   {
     id: 1,
     title: "AlphaTradeZone",
     category: "Front-End Engineering",
     image: "/images/project1.jpg", 
-    description: "A high-performance landing page engineered for a premier trading signal service. Built purely with React, Tailwind, and strict GSAP sequencing to deliver a buttery-smooth, premium DOM experience without relying on WebGL",
+    description: "A high-performance landing page engineered for a premier trading signal service. Built purely with React, Tailwind, and strict GSAP sequencing to deliver a buttery-smooth, premium DOM experience without relying on WebGL.",
     link: "#",
     theme: {
       border: "border-cyan-500/40",
@@ -32,7 +28,7 @@ const PROJECTS = [
   },
   {
     id: 2,
-    title: "Web Experience",
+    title: "Web Experiences",
     category: "3D Architecture",
     image: "/images/project2.jpg",
     description: "An immersive 3D web portfolio built for an architect. I handled the entire pipeline: transforming raw CAD files into optimized models, orchestrating the rendering, and building a responsive, state-driven world using React Three Fiber, GSAP, and Zustand.",
@@ -95,26 +91,49 @@ export default function WorksPhaseUI() {
   const cardRefs = useRef([]) 
   const shapeRefs = useRef([]) 
 
-  // EDGE GLOW TRACKER
+  // ==========================================
+  // ZERO-COST CPU TRACKING (Layout Thrashing Fix)
+  // ==========================================
   useEffect(() => {
     if (!isExplore) return;
+    
+    // CRITICAL CPU SAVIOR: Do not run hover math on touch devices!
+    if (window.matchMedia("(hover: none)").matches) return;
+
+    let cachedCardRects = [];
+    let cachedShapeRects = [];
+
+    // Cache the measurements so we never freeze the CPU asking for them
+    const cacheRects = () => {
+      cachedCardRects = cardRefs.current.map(el => el ? el.getBoundingClientRect() : null);
+      cachedShapeRects = shapeRefs.current.map(el => el ? el.getBoundingClientRect() : null);
+    }
+    
+    // Initial cache and cache on resize only
+    cacheRects();
+    window.addEventListener('resize', cacheRects);
+
     const handleGlobalMove = (e) => {
-      cardRefs.current.forEach((card) => {
-        if (!card) return;
-        const rect = card.getBoundingClientRect();
+      cardRefs.current.forEach((card, index) => {
+        if (!card || !cachedCardRects[index]) return;
+        const rect = cachedCardRects[index];
         card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
         card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
       });
-      shapeRefs.current.forEach((shape) => {
-        if (!shape) return;
-        const rect = shape.getBoundingClientRect();
+      shapeRefs.current.forEach((shape, index) => {
+        if (!shape || !cachedShapeRects[index]) return;
+        const rect = cachedShapeRects[index];
         shape.style.setProperty('--shape-mouse-x', `${e.clientX - rect.left}px`);
         shape.style.setProperty('--shape-mouse-y', `${e.clientY - rect.top}px`);
       });
     };
-    window.addEventListener('mousemove', handleGlobalMove);
-    return () => window.removeEventListener('mousemove', handleGlobalMove);
-  }, [isExplore]);
+
+    window.addEventListener('mousemove', handleGlobalMove, { passive: true }); // passive flag saves CPU
+    return () => {
+      window.removeEventListener('mousemove', handleGlobalMove);
+      window.removeEventListener('resize', cacheRects);
+    }
+  }, [isExplore, expandedId]); // Re-cache when expandedId changes!
 
   // THE 90-DEGREE CIRCUIT BOARD MATH
   const recalculatePaths = () => {
@@ -224,11 +243,12 @@ export default function WorksPhaseUI() {
       gsap.to(compacts, { autoAlpha: 0, duration: 0.2 })
       gsap.to(lineElements, { opacity: 0, duration: 0.3 }) 
 
-      gsap.to(otherCards, { width: "0%", margin: "0px", opacity: 0, duration: 0.8, ease: 'expo.inOut' })
-      gsap.to(activeCard, { width: "100%", height: "100%", marginBottom: "0px", borderRadius: "60px 60px 16px 16px", duration: 0.8, ease: 'expo.inOut' })
+      // Added force3D to push the work to the GPU
+      gsap.to(otherCards, { width: "0%", margin: "0px", opacity: 0, duration: 0.8, ease: 'expo.inOut', force3D: true })
+      gsap.to(activeCard, { width: "100%", height: "100%", marginBottom: "0px", borderRadius: "60px 60px 16px 16px", duration: 0.8, ease: 'expo.inOut', force3D: true })
 
-      gsap.fromTo(activeCard.querySelector('.expanded-content'), { autoAlpha: 0, x: 20 }, { autoAlpha: 1, x: 0, duration: 0.6, delay: 0.4, ease: 'power2.out' })
-      gsap.fromTo(activeCard.querySelectorAll('.anim-text'), { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, delay: 0.5, ease: 'power2.out' })
+      gsap.fromTo(activeCard.querySelector('.expanded-content'), { autoAlpha: 0, x: 20 }, { autoAlpha: 1, x: 0, duration: 0.6, delay: 0.4, ease: 'power2.out', force3D: true })
+      gsap.fromTo(activeCard.querySelectorAll('.anim-text'), { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, delay: 0.5, ease: 'power2.out', force3D: true })
 
     } else {
       gsap.to(expandeds, { autoAlpha: 0, duration: 0.3 })
@@ -239,7 +259,7 @@ export default function WorksPhaseUI() {
           margin: index === 1 ? "0 12px 160px 12px" : "0 12px 0 12px", 
           height: index === 1 ? "75%" : "100%",
           borderRadius: "150px 150px 16px 16px",
-          duration: 0.8, ease: 'expo.inOut'
+          duration: 0.8, ease: 'expo.inOut', force3D: true
         })
       })
 
@@ -262,6 +282,10 @@ export default function WorksPhaseUI() {
           -webkit-mask-composite: xor;
           mask-composite: exclude;
         }
+        /* CPU SAVIOR: Tells browser to allocate GPU memory for these heavy layout elements */
+        .project-window {
+          will-change: width, height, margin, transform;
+        }
       `}</style>
 
       <div ref={containerRef} className="invisible opacity-0 pointer-events-none fixed inset-0 z-40 flex items-center justify-center p-4 sm:p-10 lg:p-16">
@@ -278,41 +302,42 @@ export default function WorksPhaseUI() {
           ))}
         </svg>
 
-        <div className="flex w-full max-w-6xl flex-row items-end justify-center h-[65vh] pointer-events-auto pb-8 z-40">
+        <div className="flex w-full max-w-6xl flex-col items-center sm:flex-row sm:items-end justify-center h-[85vh] sm:h-[65vh] pointer-events-auto pb-8 z-40">
           {PROJECTS.map((project, index) => (
             <div 
               key={project.id}
               id={`card-${project.id}`}
               ref={el => cardRefs.current[index] = el}
-              className={`project-window group relative flex flex-col overflow-hidden border backdrop-blur-2xl transition-shadow duration-500 ${project.theme.border} ${project.theme.bg} ${project.theme.hoverBox}`}
-              style={{ width: "33.333%", margin: index === 1 ? "0 12px 160px 12px" : "0 12px 0 12px", height: index === 1 ? "75%" : "100%", borderRadius: "150px 150px 12px 12px" }}
+              className={`project-window group relative flex flex-col overflow-hidden border transition-shadow duration-500 ${project.theme.border} ${project.theme.bg} ${project.theme.hoverBox}`}
+              // Removed backdrop-blur here as well to save CPU composite rendering
+              style={{ width: "33.333%", margin: index === 1 ? "0 12px 160px 12px" : "0 12px 0 12px", height: index === 1 ? "75%" : "100%", borderRadius: "150px 150px 12px 12px", backgroundColor: "rgba(5,5,5,0.85)" }}
             >
               
               <div 
-                className="glass-edge-glow pointer-events-none absolute inset-0 z-50 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                className="glass-edge-glow pointer-events-none absolute inset-0 z-50 opacity-0 transition-opacity duration-300 group-hover:opacity-100 hidden sm:block"
                 style={{ borderRadius: 'inherit', background: `radial-gradient(350px circle at var(--mouse-x) var(--mouse-y), ${project.theme.glow}, transparent 40%)` }}
               />
 
-              <div ref={el => targetRefs.current[index] = el} className="absolute bottom-10 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white opacity-40 shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+              <div ref={el => targetRefs.current[index] = el} className="absolute bottom-10 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white opacity-40 shadow-[0_0_10px_rgba(255,255,255,0.5)] hidden sm:block" />
 
               {/* COMPACT VIEW */}
-              <div className="compact-content absolute inset-0 flex flex-col items-center justify-center cursor-none" onClick={() => setExpandedId(project.id)}>
+              <div className="compact-content absolute inset-0 flex flex-col items-center justify-center sm:cursor-none" onClick={() => setExpandedId(project.id)}>
                 <div className="absolute top-0 left-1/2 flex h-full w-[280px] -translate-x-1/2 flex-col items-center">
                     
                     <div 
                       ref={el => shapeRefs.current[index] = el}
-                      className={`shape-float mt-[80px] relative flex h-16 w-16 items-center justify-center rounded-full bg-black/50 shadow-[0_0_30px_rgba(0,0,0,0.6)] transition-all duration-500 group-hover:scale-110 group-hover:bg-black/80`}
+                      className={`shape-float mt-[40px] sm:mt-[80px] relative flex h-16 w-16 items-center justify-center rounded-full bg-black/50 shadow-[0_0_30px_rgba(0,0,0,0.6)] transition-all duration-500 group-hover:scale-110 group-hover:bg-black/80`}
                     >
                         <div className={`absolute inset-0 rounded-full border opacity-50 ${project.theme.border}`} />
                         <div 
-                            className="glass-edge-glow absolute inset-0 z-10 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                            className="glass-edge-glow absolute inset-0 z-10 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 hidden sm:block"
                             style={{ background: `radial-gradient(100px circle at var(--shape-mouse-x) var(--shape-mouse-y), ${project.theme.glow}, transparent 50%)` }}
                         />
 
                         <div className={`shape-spin relative flex h-3 w-3 items-center justify-center ${project.theme.bgDark}`}>
                             <div className={`absolute inset-0 border opacity-50 ${project.theme.border}`} />
                             <div 
-                                className="glass-edge-glow absolute inset-0 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                                className="glass-edge-glow absolute inset-0 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100 hidden sm:block"
                                 style={{ background: `radial-gradient(100px circle at calc(var(--shape-mouse-x) - 26px) calc(var(--shape-mouse-y) - 26px), ${project.theme.glow}, transparent 50%)` }}
                             />
                         </div>
@@ -334,41 +359,28 @@ export default function WorksPhaseUI() {
               <div className="expanded-content invisible opacity-0 absolute inset-0 flex flex-col md:flex-row">
                 <button 
                   onClick={(e) => { e.stopPropagation(); setExpandedId(null); }}
-                  className={`absolute right-6 top-8 z-20 flex h-12 w-12 items-center justify-center rounded-full border bg-black/50 backdrop-blur-md transition-all hover:scale-110 hover:bg-black/80 cursor-none ${project.theme.accent} ${project.theme.border}`}
+                  className={`absolute right-6 top-8 z-20 flex h-12 w-12 items-center justify-center rounded-full border bg-black/50 transition-all hover:scale-110 hover:bg-black/80 sm:cursor-none ${project.theme.accent} ${project.theme.border}`}
                 >
                   <span className="text-xl font-light">✕</span>
                 </button>
 
-                {/* ========================================================= */}
-                {/* THE MINIMAL PERSIAN FRAME (JADVAL & KHATAM)               */}
-                {/* Notice the padding, corner diamonds, and vignette shadow! */}
-                {/* ========================================================= */}
                 <div className={`relative flex h-64 w-full items-center justify-center border-b p-6 md:h-full md:w-[45%] md:border-b-0 md:border-r bg-black/40 ${project.theme.border}`}>
-                    
-                    {/* Outer Frame Box - anim-text class makes it slide up gracefully with GSAP */}
                     <div className={`anim-text relative h-full w-full border ${project.theme.borderBright} p-1.5`}>
-                        
-                        {/* The 4 Khatam Corner Diamonds */}
                         <div className={`absolute -left-1.5 -top-1.5 h-3 w-3 rotate-45 border bg-[#050505] ${project.theme.borderBright}`} />
                         <div className={`absolute -right-1.5 -top-1.5 h-3 w-3 rotate-45 border bg-[#050505] ${project.theme.borderBright}`} />
                         <div className={`absolute -left-1.5 -bottom-1.5 h-3 w-3 rotate-45 border bg-[#050505] ${project.theme.borderBright}`} />
                         <div className={`absolute -right-1.5 -bottom-1.5 h-3 w-3 rotate-45 border bg-[#050505] ${project.theme.borderBright}`} />
                         
-                        {/* Inner Image Wrapper */}
                         <div className={`group/img relative h-full w-full overflow-hidden border ${project.theme.border}`}>
                             <img src={project.image} alt={project.title} className="h-full w-full object-cover mix-blend-screen opacity-70 transition-all duration-700 group-hover/img:scale-105 group-hover/img:opacity-100" />
-                            
-                            {/* Inner Vignette Shadow to blend edges into the frame */}
                             <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.8)]" />
                         </div>
-
                     </div>
                 </div>
 
                 <div className="relative flex w-full flex-col justify-center p-8 md:w-[55%] md:p-16 lg:p-24 bg-gradient-to-br from-black/80 to-transparent">
                   <span className={`anim-text mb-4 text-[10px] uppercase tracking-[0.4em] opacity-80 ${project.theme.accent}`}>{project.category}</span>
                   <h2 className={`anim-text mb-8 text-4xl font-light tracking-[0.15em] sm:text-5xl ${project.theme.text}`}>{project.title}</h2>
-                  
                   <p className={`anim-text mb-12 leading-relaxed font-light text-sm opacity-80 ${project.theme.text}`}>
                     {project.description}
                   </p>
@@ -378,15 +390,12 @@ export default function WorksPhaseUI() {
                     target="_blank" 
                     rel="noreferrer"
                     style={{ clipPath: 'polygon(15px 0, calc(100% - 15px) 0, 100% 15px, 100% calc(100% - 15px), calc(100% - 15px) 100%, 15px 100%, 0 calc(100% - 15px), 0 15px)' }}
-                    className={`anim-text group/btn cursor-none relative flex w-fit items-center overflow-hidden bg-black/60 px-10 py-5 text-[10px] uppercase tracking-[0.4em] transition-all duration-500 hover:scale-105 active:scale-95 ${project.theme.text}`}
+                    className={`anim-text group/btn sm:cursor-none relative flex w-fit items-center overflow-hidden bg-black/60 px-10 py-5 text-[10px] uppercase tracking-[0.4em] transition-all duration-500 hover:scale-105 active:scale-95 ${project.theme.text}`}
                   >
                     <div className={`absolute inset-0 transition-colors duration-500 border ${project.theme.border} group-hover/btn:border-transparent`} style={{ clipPath: 'polygon(15px 0, calc(100% - 15px) 0, 100% 15px, 100% calc(100% - 15px), calc(100% - 15px) 100%, 15px 100%, 0 calc(100% - 15px), 0 15px)' }} />
                     <div className={`absolute inset-[3px] opacity-0 scale-110 transition-all duration-500 border group-hover/btn:opacity-100 group-hover/btn:scale-100 ${project.theme.borderBright} shadow-[inset_0_0_20px_currentColor]`} style={{ clipPath: 'polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)' }} />
-                    
                     <div className={`absolute inset-0 -translate-x-full transition-transform duration-700 ease-out group-hover/btn:translate-x-0 ${project.theme.bgSweep}`} />
-                    
                     <span className="relative z-10 font-bold transition-colors duration-300 group-hover/btn:text-white">VIEW RECORD</span>
-                    
                     <div className="relative z-10 ml-6 flex h-4 w-4 items-center justify-center">
                       <span className="absolute transition-all duration-500 group-hover/btn:translate-x-4 group-hover/btn:opacity-0 group-hover/btn:scale-50">→</span>
                       <div className={`absolute flex items-center justify-center opacity-0 scale-0 transition-all duration-700 group-hover/btn:opacity-100 group-hover/btn:scale-100 group-hover/btn:rotate-[225deg]`}>
