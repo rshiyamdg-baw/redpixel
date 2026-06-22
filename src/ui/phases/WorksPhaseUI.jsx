@@ -28,7 +28,7 @@ const PROJECTS = [
   },
   {
     id: 2,
-    title: "Web Experiences",
+    title: "Creative Developer",
     category: "3D Architecture",
     image: "/images/project2.jpg",
     description: "An immersive 3D web portfolio built for an architect. I handled the entire pipeline: transforming raw CAD files into optimized models, orchestrating the rendering, and building a responsive, state-driven world using React Three Fiber, GSAP, and Zustand.",
@@ -91,51 +91,33 @@ export default function WorksPhaseUI() {
   const cardRefs = useRef([]) 
   const shapeRefs = useRef([]) 
 
-  // ==========================================
-  // ZERO-COST CPU TRACKING (Layout Thrashing Fix)
-  // ==========================================
+  // EDGE GLOW TRACKER (Safely disabled on mobile to save CPU)
   useEffect(() => {
     if (!isExplore) return;
     
-    // CRITICAL CPU SAVIOR: Do not run hover math on touch devices!
-    if (window.matchMedia("(hover: none)").matches) return;
-
-    let cachedCardRects = [];
-    let cachedShapeRects = [];
-
-    // Cache the measurements so we never freeze the CPU asking for them
-    const cacheRects = () => {
-      cachedCardRects = cardRefs.current.map(el => el ? el.getBoundingClientRect() : null);
-      cachedShapeRects = shapeRefs.current.map(el => el ? el.getBoundingClientRect() : null);
-    }
-    
-    // Initial cache and cache on resize only
-    cacheRects();
-    window.addEventListener('resize', cacheRects);
+    // Check if the device is a touch screen (mobile). If yes, DO NOT track mouse!
+    const isTouch = window.matchMedia("(hover: none)").matches;
+    if (isTouch) return;
 
     const handleGlobalMove = (e) => {
-      cardRefs.current.forEach((card, index) => {
-        if (!card || !cachedCardRects[index]) return;
-        const rect = cachedCardRects[index];
+      cardRefs.current.forEach((card) => {
+        if (!card) return;
+        const rect = card.getBoundingClientRect();
         card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
         card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
       });
-      shapeRefs.current.forEach((shape, index) => {
-        if (!shape || !cachedShapeRects[index]) return;
-        const rect = cachedShapeRects[index];
+      shapeRefs.current.forEach((shape) => {
+        if (!shape) return;
+        const rect = shape.getBoundingClientRect();
         shape.style.setProperty('--shape-mouse-x', `${e.clientX - rect.left}px`);
         shape.style.setProperty('--shape-mouse-y', `${e.clientY - rect.top}px`);
       });
     };
 
-    window.addEventListener('mousemove', handleGlobalMove, { passive: true }); // passive flag saves CPU
-    return () => {
-      window.removeEventListener('mousemove', handleGlobalMove);
-      window.removeEventListener('resize', cacheRects);
-    }
-  }, [isExplore, expandedId]); // Re-cache when expandedId changes!
+    window.addEventListener('mousemove', handleGlobalMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleGlobalMove);
+  }, [isExplore, expandedId]); // Rebind safely on expand
 
-  // THE 90-DEGREE CIRCUIT BOARD MATH
   const recalculatePaths = () => {
     if (!pathRefs.current.length || !targetRefs.current.length || !centerRefs.current.length) return;
 
@@ -166,7 +148,6 @@ export default function WorksPhaseUI() {
     return () => window.removeEventListener('resize', handleResize)
   }, [isExplore, expandedId])
 
-  // THE MASTER OVERSEER
   useEffect(() => {
     if (!containerRef.current) return
     const mainWrapper = containerRef.current
@@ -205,16 +186,10 @@ export default function WorksPhaseUI() {
           gsap.to(mainWrapper.querySelector('#center-pixels'), { opacity: 1, y: 0, duration: 0.8, ease: 'back.out(2)' })
           
           pathRefs.current.forEach((path, i) => {
-            gsap.to(path, { 
-              strokeDashoffset: 0, duration: 1.0, 
-              ease: 'power3.inOut', delay: 0.2 + (i * 0.1) 
-            })
+            gsap.to(path, { strokeDashoffset: 0, duration: 1.0, ease: 'power3.inOut', delay: 0.2 + (i * 0.1) })
           })
 
-          gsap.to(cards, { 
-            y: 0, opacity: 1, scale: 1, 
-            duration: 1.2, stagger: 0.15, ease: 'power3.out', delay: 0.6
-          })
+          gsap.to(cards, { y: 0, opacity: 1, scale: 1, duration: 1.2, stagger: 0.15, ease: 'power3.out', delay: 0.6 })
         }
       } else {
         gsap.to(cards, { y: -100, opacity: 0, scale: 0.95, duration: 0.5, stagger: 0.05, ease: 'power2.in' })
@@ -224,10 +199,7 @@ export default function WorksPhaseUI() {
            gsap.to(path, { strokeDashoffset: pathLengths.current[i], duration: 0.4, ease: 'power2.inOut' })
         })
 
-        gsap.to(mainWrapper, { 
-            autoAlpha: 0, duration: 0.5, delay: 0.4,
-            onComplete: () => setExpandedId(null)
-        })
+        gsap.to(mainWrapper, { autoAlpha: 0, duration: 0.5, delay: 0.4, onComplete: () => setExpandedId(null) })
       }
       prevExplore.current = isExplore
       return; 
@@ -243,12 +215,11 @@ export default function WorksPhaseUI() {
       gsap.to(compacts, { autoAlpha: 0, duration: 0.2 })
       gsap.to(lineElements, { opacity: 0, duration: 0.3 }) 
 
-      // Added force3D to push the work to the GPU
-      gsap.to(otherCards, { width: "0%", margin: "0px", opacity: 0, duration: 0.8, ease: 'expo.inOut', force3D: true })
-      gsap.to(activeCard, { width: "100%", height: "100%", marginBottom: "0px", borderRadius: "60px 60px 16px 16px", duration: 0.8, ease: 'expo.inOut', force3D: true })
+      gsap.to(otherCards, { width: "0%", margin: "0px", opacity: 0, duration: 0.8, ease: 'expo.inOut' })
+      gsap.to(activeCard, { width: "100%", height: "100%", marginBottom: "0px", borderRadius: "60px 60px 16px 16px", duration: 0.8, ease: 'expo.inOut' })
 
-      gsap.fromTo(activeCard.querySelector('.expanded-content'), { autoAlpha: 0, x: 20 }, { autoAlpha: 1, x: 0, duration: 0.6, delay: 0.4, ease: 'power2.out', force3D: true })
-      gsap.fromTo(activeCard.querySelectorAll('.anim-text'), { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, delay: 0.5, ease: 'power2.out', force3D: true })
+      gsap.fromTo(activeCard.querySelector('.expanded-content'), { autoAlpha: 0, x: 20 }, { autoAlpha: 1, x: 0, duration: 0.6, delay: 0.4, ease: 'power2.out' })
+      gsap.fromTo(activeCard.querySelectorAll('.anim-text'), { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, delay: 0.5, ease: 'power2.out' })
 
     } else {
       gsap.to(expandeds, { autoAlpha: 0, duration: 0.3 })
@@ -259,7 +230,7 @@ export default function WorksPhaseUI() {
           margin: index === 1 ? "0 12px 160px 12px" : "0 12px 0 12px", 
           height: index === 1 ? "75%" : "100%",
           borderRadius: "150px 150px 16px 16px",
-          duration: 0.8, ease: 'expo.inOut', force3D: true
+          duration: 0.8, ease: 'expo.inOut'
         })
       })
 
@@ -276,15 +247,12 @@ export default function WorksPhaseUI() {
         @keyframes slowSpin { from { transform: rotate(45deg); } to { transform: rotate(405deg); } }
         .shape-float { animation: slowFloat 6s ease-in-out infinite; }
         .shape-spin { animation: slowSpin 8s linear infinite; }
+        
         .glass-edge-glow {
           padding: 1px;
           -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
           -webkit-mask-composite: xor;
           mask-composite: exclude;
-        }
-        /* CPU SAVIOR: Tells browser to allocate GPU memory for these heavy layout elements */
-        .project-window {
-          will-change: width, height, margin, transform;
         }
       `}</style>
 
@@ -302,44 +270,39 @@ export default function WorksPhaseUI() {
           ))}
         </svg>
 
-        <div className="flex w-full max-w-6xl flex-col items-center sm:flex-row sm:items-end justify-center h-[85vh] sm:h-[65vh] pointer-events-auto pb-8 z-40">
+        {/* RESTORED UI: Clean flex layout, removed the layout hacks */}
+        <div className="flex w-full max-w-6xl flex-row items-end justify-center h-[65vh] pointer-events-auto pb-8 z-40">
           {PROJECTS.map((project, index) => (
             <div 
               key={project.id}
               id={`card-${project.id}`}
               ref={el => cardRefs.current[index] = el}
-              className={`project-window group relative flex flex-col overflow-hidden border transition-shadow duration-500 ${project.theme.border} ${project.theme.bg} ${project.theme.hoverBox}`}
-              // Removed backdrop-blur here as well to save CPU composite rendering
-              style={{ width: "33.333%", margin: index === 1 ? "0 12px 160px 12px" : "0 12px 0 12px", height: index === 1 ? "75%" : "100%", borderRadius: "150px 150px 12px 12px", backgroundColor: "rgba(5,5,5,0.85)" }}
+              className={`project-window group relative flex flex-col overflow-hidden border backdrop-blur-md transition-shadow duration-500 ${project.theme.border} ${project.theme.bg} ${project.theme.hoverBox}`}
+              style={{ width: "33.333%", margin: index === 1 ? "0 12px 160px 12px" : "0 12px 0 12px", height: index === 1 ? "75%" : "100%", borderRadius: "150px 150px 12px 12px" }}
             >
               
+              {/* HIDDEN ON MOBILE using hidden md:block */}
               <div 
-                className="glass-edge-glow pointer-events-none absolute inset-0 z-50 opacity-0 transition-opacity duration-300 group-hover:opacity-100 hidden sm:block"
+                className="glass-edge-glow pointer-events-none absolute inset-0 z-50 opacity-0 transition-opacity duration-300 group-hover:opacity-100 hidden md:block"
                 style={{ borderRadius: 'inherit', background: `radial-gradient(350px circle at var(--mouse-x) var(--mouse-y), ${project.theme.glow}, transparent 40%)` }}
               />
 
-              <div ref={el => targetRefs.current[index] = el} className="absolute bottom-10 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white opacity-40 shadow-[0_0_10px_rgba(255,255,255,0.5)] hidden sm:block" />
+              <div ref={el => targetRefs.current[index] = el} className="absolute bottom-10 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white opacity-40 shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
 
               {/* COMPACT VIEW */}
-              <div className="compact-content absolute inset-0 flex flex-col items-center justify-center sm:cursor-none" onClick={() => setExpandedId(project.id)}>
+              <div className="compact-content absolute inset-0 flex flex-col items-center justify-center cursor-none" onClick={() => setExpandedId(project.id)}>
                 <div className="absolute top-0 left-1/2 flex h-full w-[280px] -translate-x-1/2 flex-col items-center">
                     
                     <div 
                       ref={el => shapeRefs.current[index] = el}
-                      className={`shape-float mt-[40px] sm:mt-[80px] relative flex h-16 w-16 items-center justify-center rounded-full bg-black/50 shadow-[0_0_30px_rgba(0,0,0,0.6)] transition-all duration-500 group-hover:scale-110 group-hover:bg-black/80`}
+                      className={`shape-float mt-[80px] relative flex h-16 w-16 items-center justify-center rounded-full bg-black/50 shadow-[0_0_30px_rgba(0,0,0,0.6)] transition-all duration-500 group-hover:scale-110 group-hover:bg-black/80`}
                     >
                         <div className={`absolute inset-0 rounded-full border opacity-50 ${project.theme.border}`} />
-                        <div 
-                            className="glass-edge-glow absolute inset-0 z-10 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 hidden sm:block"
-                            style={{ background: `radial-gradient(100px circle at var(--shape-mouse-x) var(--shape-mouse-y), ${project.theme.glow}, transparent 50%)` }}
-                        />
+                        <div className="glass-edge-glow absolute inset-0 z-10 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 hidden md:block" style={{ background: `radial-gradient(100px circle at var(--shape-mouse-x) var(--shape-mouse-y), ${project.theme.glow}, transparent 50%)` }} />
 
                         <div className={`shape-spin relative flex h-3 w-3 items-center justify-center ${project.theme.bgDark}`}>
                             <div className={`absolute inset-0 border opacity-50 ${project.theme.border}`} />
-                            <div 
-                                className="glass-edge-glow absolute inset-0 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100 hidden sm:block"
-                                style={{ background: `radial-gradient(100px circle at calc(var(--shape-mouse-x) - 26px) calc(var(--shape-mouse-y) - 26px), ${project.theme.glow}, transparent 50%)` }}
-                            />
+                            <div className="glass-edge-glow absolute inset-0 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100 hidden md:block" style={{ background: `radial-gradient(100px circle at calc(var(--shape-mouse-x) - 26px) calc(var(--shape-mouse-y) - 26px), ${project.theme.glow}, transparent 50%)` }} />
                         </div>
                     </div>
 
@@ -359,7 +322,7 @@ export default function WorksPhaseUI() {
               <div className="expanded-content invisible opacity-0 absolute inset-0 flex flex-col md:flex-row">
                 <button 
                   onClick={(e) => { e.stopPropagation(); setExpandedId(null); }}
-                  className={`absolute right-6 top-8 z-20 flex h-12 w-12 items-center justify-center rounded-full border bg-black/50 transition-all hover:scale-110 hover:bg-black/80 sm:cursor-none ${project.theme.accent} ${project.theme.border}`}
+                  className={`absolute right-6 top-8 z-20 flex h-12 w-12 items-center justify-center rounded-full border bg-black/50 backdrop-blur-md transition-all hover:scale-110 hover:bg-black/80 cursor-none ${project.theme.accent} ${project.theme.border}`}
                 >
                   <span className="text-xl font-light">✕</span>
                 </button>
@@ -390,7 +353,7 @@ export default function WorksPhaseUI() {
                     target="_blank" 
                     rel="noreferrer"
                     style={{ clipPath: 'polygon(15px 0, calc(100% - 15px) 0, 100% 15px, 100% calc(100% - 15px), calc(100% - 15px) 100%, 15px 100%, 0 calc(100% - 15px), 0 15px)' }}
-                    className={`anim-text group/btn sm:cursor-none relative flex w-fit items-center overflow-hidden bg-black/60 px-10 py-5 text-[10px] uppercase tracking-[0.4em] transition-all duration-500 hover:scale-105 active:scale-95 ${project.theme.text}`}
+                    className={`anim-text group/btn cursor-none relative flex w-fit items-center overflow-hidden bg-black/60 px-10 py-5 text-[10px] uppercase tracking-[0.4em] transition-all duration-500 hover:scale-105 active:scale-95 ${project.theme.text}`}
                   >
                     <div className={`absolute inset-0 transition-colors duration-500 border ${project.theme.border} group-hover/btn:border-transparent`} style={{ clipPath: 'polygon(15px 0, calc(100% - 15px) 0, 100% 15px, 100% calc(100% - 15px), calc(100% - 15px) 100%, 15px 100%, 0 calc(100% - 15px), 0 15px)' }} />
                     <div className={`absolute inset-[3px] opacity-0 scale-110 transition-all duration-500 border group-hover/btn:opacity-100 group-hover/btn:scale-100 ${project.theme.borderBright} shadow-[inset_0_0_20px_currentColor]`} style={{ clipPath: 'polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)' }} />
