@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { useExperience, MODES } from '../../stores/useExperience'
 
-const RotatingPixel = ({ colorClass }) => (
-  <div className={`absolute right-5 top-1/2 -translate-y-1/2 h-2 w-2 border opacity-0 transition-all duration-700 group-hover/btn:opacity-100 group-hover/btn:rotate-[225deg] shadow-[0_0_15px_rgba(0,0,0,0)] ${colorClass}`} />
-)
+// const RotatingPixel = ({ colorClass }) => (
+//   <div className={`absolute right-5 top-1/2 -translate-y-1/2 h-2 w-2 border opacity-0 transition-all duration-700 group-hover/btn:opacity-100 group-hover/btn:rotate-[225deg] shadow-[0_0_15px_rgba(0,0,0,0)] ${colorClass}`} />
+// )
 
 const PROJECTS = [
   {
@@ -32,7 +32,7 @@ const PROJECTS = [
   },
   {
     id: 2,
-    title: "It's About Asal",
+    title: "Web Experience",
     category: "3D Architecture",
     image: "/images/project2.jpg",
     description: "An immersive 3D web portfolio built for an architect. I handled the entire pipeline: transforming raw CAD files into optimized models, orchestrating the rendering, and building a responsive, state-driven world using React Three Fiber, GSAP, and Zustand.",

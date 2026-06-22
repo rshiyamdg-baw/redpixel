@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import { useExperience } from '../stores/useExperience'
 import TimelineBridge from '../core/timeline/TimelineBridge'
 import IntroCube from '../world/introCube/IntroCube'
-
+import { Perf } from 'r3f-perf'
 function Scene() {
   return (
     <>
@@ -39,6 +39,7 @@ export default function Experience() {
         }}
         shadows
       >
+        <Perf position="top-left" />
         <Suspense fallback={null}>
           <Scene />
         </Suspense>
